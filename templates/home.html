@@ -1,0 +1,192 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Home</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-image: url('https://media.istockphoto.com/id/1130714046/photo/empty-dark-wooden-table-in-front-of-abstract-blurred-bokeh-background-of-restaurant-can-be.jpg?s=612x612&w=0&k=20&c=9ywAfpo4Gw3uqPs7-Jxo5ZJj06-B2YOvoKGGktRKx6E=');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            text-align: center;
+        }
+        header {
+            padding: 50px;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        h1 {
+            font-size: 3rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+        .food-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+        .food-item {
+            margin: 15px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .food-item img {
+            width: 250px;
+            height: 200px;
+            border-radius: 10px;
+            transition: transform 0.3s;
+        }
+        .food-item:hover img {
+            transform: scale(1.1);
+        }
+        .food-item h3 {
+            font-size: 1.5rem;
+            margin: 10px 0;
+        }
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            text-align: left;
+            color: black;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome to Our Restaurant</h1>
+    </header>
+    <div class="food-gallery">
+        <div class="food-item" onclick="openModal('Pizza')">
+            <img src="https://cdn.pixabay.com/photo/2022/08/02/07/30/pizza-7359753_1280.jpg" alt="Pizza">
+            <h3>Pizza</h3>
+        </div>
+        <div class="food-item" onclick="openModal('Burger')">
+            <img src="https://cdn.pixabay.com/photo/2018/04/25/05/16/food-3348763_640.jpg" alt="Burger">
+            <h3>Burger</h3>
+        </div>
+        <div class="food-item" onclick="openModal('Biryani')">
+            <img src="https://cdn.pixabay.com/photo/2023/10/19/11/18/biryani-8326234_640.jpg" alt="Biryani">
+            <h3>Biryani</h3>
+        </div>
+        <div class="food-item" onclick="openModal('Ice Cream')">
+            <img src="https://cdn.pixabay.com/photo/2019/08/12/13/45/ice-cream-4401300_640.jpg" alt="Ice Cream">
+            <h3>Ice Cream</h3>
+        </div>
+        <div class="food-item" onclick="openModal('Shish Kebab')">
+            <img src="https://cdn.pixabay.com/photo/2014/08/14/14/21/shish-kebab-417994_640.jpg" alt="Shish Kebab">
+            <h3>Shish Kebab</h3>
+        </div>
+    </div>
+
+    <!-- Order Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="food-title"></h2>
+            <label for="table-number">Table Number:</label>
+            <input type="text" id="table-number" placeholder="Enter table number">
+            <br><br>
+            <label for="person-name">Person Name:</label>
+            <input type="text" id="person-name" placeholder="Enter your name">
+            <br><br>
+            <button onclick="orderFood()">Order</button>
+        </div>
+    </div>
+
+    <script>
+        function openModal(foodName) {
+            document.getElementById('myModal').style.display = 'block';
+            document.getElementById('food-title').innerText = foodName;
+        }
+
+        function closeModal() {
+            document.getElementById('myModal').style.display = 'none';
+            document.getElementById('table-number').value = '';
+            document.getElementById('person-name').value = '';
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function orderFood() {
+            const foodName = document.getElementById('food-title').innerText;
+            const tableNumber = document.getElementById('table-number').value;
+            const personName = document.getElementById('person-name').value;
+
+            if (tableNumber && personName) {
+                fetch("{% url 'order_food' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),  // Dynamically get CSRF token
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        'food_name': foodName,
+                        'table_number': tableNumber,
+                        'person_name': personName
+                    })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Network response was not ok.');
+                })
+                .then(data => {
+                    alert(data.message); // Show success message
+                    closeModal(); // Close modal after order
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('There was an issue placing your order. Please try again.');
+                });
+            } else {
+                alert('Please enter both table number and person name.');
+            }
+        }
+    </script>
+</body>
+</html>
